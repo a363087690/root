@@ -30,7 +30,17 @@ done
 [[ ! -f /etc/ssh/sshd_config ]] && sudo ${PACKAGE_UPDATE[int]} && sudo ${PACKAGE_INSTALL[int]} openssh-server
 [[ -z $(type -P curl) ]] && sudo ${PACKAGE_UPDATE[int]} && sudo ${PACKAGE_INSTALL[int]} curl
 
-IP=$(curl -sm8 ip.sb)
+WgcfIPv4Status=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+WgcfIPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+if [[ $WgcfIPv4Status =~ "on"|"plus" ]] || [[ $WgcfIPv6Status =~ "on"|"plus" ]]; then
+    wg-quick down wgcf >/dev/null 2>&1
+    v6=$(curl -s6m8 https://ip.gs -k)
+    v4=$(curl -s4m8 https://ip.gs -k)
+    wg-quick up wgcf >/dev/null 2>&1
+else
+    v6=$(curl -s6m8 https://ip.gs -k)
+    v4=$(curl -s4m8 https://ip.gs -k)
+fi
 
 sudo lsattr /etc/passwd /etc/shadow >/dev/null 2>&1
 sudo chattr -i /etc/passwd /etc/shadow >/dev/null 2>&1
@@ -51,7 +61,15 @@ sudo service ssh restart >/dev/null 2>&1 # 某些VPS系统的ssh服务名称为s
 sudo service sshd restart >/dev/null 2>&1
 
 yellow "VPS root登录信息设置完成！"
-green "VPS登录地址：$IP:$sshport"
+if [[ -n $v4 && -z $v6 ]]; then
+    green "VPS登录地址：$v4:$sshport"
+fi
+if [[ -z $v4 && -n $v6 ]]; then
+    green "VPS登录地址：$v6:$sshport"
+fi
+if [[ -n $v4 && -n $v6 ]]; then
+    green "VPS登录地址：$v4:$sshport 或 $v6:$sshport"
+fi
 green "用户名：root"
 green "密码：$password"
 yellow "请妥善保存好登录信息！然后重启VPS确保设置已保存！"
