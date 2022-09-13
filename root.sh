@@ -62,13 +62,13 @@ sudo service sshd restart >/dev/null 2>&1
 
 yellow "VPS root登录信息设置完成！"
 if [[ -n $v4 && -z $v6 ]]; then
-    green "VPS登录地址：$v4:$sshport"
+    green "VPS登录IP地址及端口为：$v4:$sshport"
 fi
 if [[ -z $v4 && -n $v6 ]]; then
-    green "VPS登录地址：$v6:$sshport"
+    green "VPS登录IP地址及端口为：$v6:$sshport"
 fi
 if [[ -n $v4 && -n $v6 ]]; then
-    green "VPS登录地址：$v4:$sshport 或 $v6:$sshport"
+    green "VPS登录IP地址及端口为：$v4:$sshport 或 $v6:$sshport"
 fi
 green "用户名：root"
 green "密码：$password"
